@@ -319,8 +319,8 @@ public class MainActivity extends AppCompatActivity {
                 null);
         T4_has = new HashMap<>();
         while (c4_has.moveToNext()) {
-            T4_has.put(c4_local.getString(c4_local.getColumnIndex("sex")),
-                    c4_local.getInt(c4_local.getColumnIndex("c")));
+            T4_has.put(c4_has.getString(c4_has.getColumnIndex("sex")),
+                    c4_has.getInt(c4_has.getColumnIndex("c")));
         }
         //第五张图
         Cursor c5 = dbR.rawQuery("select count(*) from CarPeccancy group by type", null);
@@ -336,7 +336,7 @@ public class MainActivity extends AppCompatActivity {
         T6 = new ArrayList<>();
         while (c6.moveToNext()) {
             Map<String, String> data = new HashMap<>();
-            data.put("type", c6.getString(c6.getColumnIndex("r")));
+            data.put("type", c6.getString(c6.getColumnIndex("t")));
             data.put("count", c6.getString(c6.getColumnIndex("c")));
             T6.add(data);
         }
