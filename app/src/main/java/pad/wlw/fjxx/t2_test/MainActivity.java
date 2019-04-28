@@ -292,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
         //第三张图
         T3_localDatas = new ArrayList<>();
         T3_hasDatas = new ArrayList<>();
-        Cursor c3_local = dbR.rawQuery("select count(*) as c,type from CarInfo group by type", null);
+        Cursor c3_local = dbR.rawQuery("select count(*) as c,type from CarInfo group by type order by type desc", null);
         while (c3_local.moveToNext()) {
             Map<String, String> T3_local = new HashMap<>();
             T3_local.put("type", c3_local.getString(c3_local.getColumnIndex("type")));
@@ -300,7 +300,7 @@ public class MainActivity extends AppCompatActivity {
             T3_localDatas.add(T3_local);
         }
         Cursor c3_has = dbR.rawQuery("select count(*) as c,type from CarInfo where carnumber in " +
-                "(select carnumber from CarPeccancy group by carnumber) group by type", null);
+                "(select carnumber from CarPeccancy group by carnumber) group by type order by type desc", null);
         while (c3_has.moveToNext()) {
             Map<String, String> T3_has = new HashMap<>();
             T3_has.put("type", c3_has.getString(c3_has.getColumnIndex("type")));
