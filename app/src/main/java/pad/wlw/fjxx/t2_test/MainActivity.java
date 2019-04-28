@@ -6,7 +6,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -42,6 +41,11 @@ public class MainActivity extends AppCompatActivity {
     private Gson gson;
     private ContentValues values;
     private Map<String, Integer> T1;
+    private Map<String, Integer> T2;
+    private List<Map<String, String>> T3_localDatas, T3_hasDatas;
+    private Map<String, Integer> T4_local, T4_has;
+    private List<Integer> T5;
+    private List<Map<String, String>> T6;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
                 List<CarInfo> datas = new ArrayList<>();
                 for (int i = 0; i < array.length(); i++) {
                     CarInfo bean = gson.fromJson(array.optString(i), CarInfo.class);
-                    bean.setType(stringToType(bean.getPcardid()));
+                    bean.setType(stringToYearType(bean.getPcardid()));
                     datas.add(bean);
                 }
                 dbW.beginTransaction();
@@ -242,17 +246,100 @@ public class MainActivity extends AppCompatActivity {
 
     private void aliense() {
         T1 = new HashMap<>();
-        Cursor c1 = dbR.rawQuery("select count(*) as c from Carinfo", null);
+        Cursor c1_1 = dbR.rawQuery("select count(*) as c from Carinfo", null);
         int local = 0, has = 0;
-        if (c1.moveToFirst()) {
-            local = c1.getInt(0);
+        if (c1_1.moveToFirst()) {
+            local = c1_1.getInt(0);
         }
-        Cursor c2 = dbR.rawQuery("select count(*) as c from CarPeccancy", null);
-        if (c2.moveToFirst()) {
-            has = c2.getInt(0);
+        Cursor c1_2 = dbR.rawQuery("select count(*) as c from CarPeccancy", null);
+        if (c1_2.moveToFirst()) {
+            has = c1_2.getInt(0);
         }
         T1.put("has", has);
         T1.put("local", local);
+        //第二张图
+        T2 = new HashMap<>();
+        int once = 0, more = 0, low = 0, min = 0, high = 0, tmp;
+        Cursor c2 = dbR.rawQuery("select count(*) from CarPeccancy group by carnumber", null);
+        while (c2.moveToNext()) {
+            tmp = c2.getInt(0);
+            switch (tmp) {
+                case 1:
+                    once++;
+                    low++;
+                    break;
+                case 2:
+                    more++;
+                    low++;
+                    break;
+                case 3:
+                case 4:
+                case 5:
+                    more++;
+                    min++;
+                    break;
+                default:
+                    more++;
+                    high++;
+                    break;
+            }
+        }
+        T2.put("once", once);
+        T2.put("more", more);
+        T2.put("low", low);
+        T2.put("min", min);
+        T2.put("high", high);
+        //第三张图
+        T3_localDatas = new ArrayList<>();
+        T3_hasDatas = new ArrayList<>();
+        Cursor c3_local = dbR.rawQuery("select count(*) as c,type from CarInfo group by type", null);
+        while (c3_local.moveToNext()) {
+            Map<String, String> T3_local = new HashMap<>();
+            T3_local.put("type", c3_local.getString(c3_local.getColumnIndex("type")));
+            T3_local.put("count", c3_local.getString(c3_local.getColumnIndex("c")));
+            T3_localDatas.add(T3_local);
+        }
+        Cursor c3_has = dbR.rawQuery("select count(*) as c,type from CarInfo where carnumber in " +
+                "(select carnumber from CarPeccancy group by carnumber) group by type", null);
+        while (c3_has.moveToNext()) {
+            Map<String, String> T3_has = new HashMap<>();
+            T3_has.put("type", c3_has.getString(c3_has.getColumnIndex("type")));
+            T3_has.put("count", c3_has.getString(c3_has.getColumnIndex("c")));
+            T3_hasDatas.add(T3_has);
+        }
+        //第四张图
+        Cursor c4_local = dbR.rawQuery("select count(*)as c,sex from UserInfo group by sex", null);
+        T4_local = new HashMap<>();
+        while (c4_local.moveToNext()) {
+            T4_local.put(c4_local.getString(c4_local.getColumnIndex("sex")),
+                    c4_local.getInt(c4_local.getColumnIndex("c")));
+        }
+        Cursor c4_has = dbR.rawQuery("select count(*)as c,sex from UserInfo where cardid in (select cardid from " +
+                        "CarInfo where carnumber in (select carnumber from CarPeccancy)) group by sex",
+                null);
+        T4_has = new HashMap<>();
+        while (c4_has.moveToNext()) {
+            T4_has.put(c4_local.getString(c4_local.getColumnIndex("sex")),
+                    c4_local.getInt(c4_local.getColumnIndex("c")));
+        }
+        //第五张图
+        Cursor c5 = dbR.rawQuery("select count(*) from CarPeccancy group by type", null);
+        T5 = new ArrayList<>();
+        while (c5.moveToNext()) {
+            T5.add(c5.getInt(0));
+        }
+        //第六张图
+        Cursor c6 = dbR.rawQuery("select count(CarPeccancy.code) as c,PeccancyType.remarks as t from " +
+                "PeccancyType," +
+                "CarPeccancy where CarPeccancy.code=PeccancyType.code group by CarPeccancy.code ORDER BY c desc " +
+                "limit 10", null);
+        T6 = new ArrayList<>();
+        while (c6.moveToNext()) {
+            Map<String, String> data = new HashMap<>();
+            data.put("type", c6.getString(c6.getColumnIndex("r")));
+            data.put("count", c6.getString(c6.getColumnIndex("c")));
+            T6.add(data);
+        }
         setView();
     }
 
